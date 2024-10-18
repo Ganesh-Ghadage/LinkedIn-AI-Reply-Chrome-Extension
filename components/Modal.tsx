@@ -11,6 +11,7 @@ function Modal({setShow}:{
     const [inputPrompt, setInputPrompt] = useState<any[]>([])
     const [aiResponse, setAiResponse] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(false)
 
     //this is get referance on Prompt Box Div
     const modalContentRef = useRef<HTMLInputElement>(null);
@@ -23,6 +24,7 @@ function Modal({setShow}:{
         //setTimeout is added to have exprience like real API call
         return new Promise((res, rej) => {
             if(!textInput) {
+                setError(true)
                 return rej("No Respose")
             }
             setTimeout(() => {
@@ -70,7 +72,24 @@ function Modal({setShow}:{
         }
     }
 
-  return (
+if(error){
+    return (
+        <div id='error-div'
+            className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[4000]'
+            onClick={(event) => handleCustomModalClick(event)}
+        >
+            <div id='error-msg'
+                className='bg-red-300 text-red-700 rounded-xl w-fit p-4 mx-5 z-[10000]'
+                ref={modalContentRef}
+            >
+                Something went Wrong
+            </div>
+        </div>
+    )
+}
+
+
+return (
     <div id="custom-modal" 
             className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[4000]'
         onClick={(event) => handleCustomModalClick(event)}
