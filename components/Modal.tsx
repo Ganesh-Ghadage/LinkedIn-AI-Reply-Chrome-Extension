@@ -1,15 +1,23 @@
-import React, {useEffect, useRef, useState} from 'react'
+import React, {useRef, useState} from 'react'
 import insertIcon from "~/assets/insert.svg";
 import genIcon from "~/assets/generate.svg";
 import reGenIcon from "~/assets/regenerate.svg";
+
+import { generateAIReply } from '@/services/OpenAIService';
+import { generateGeminiReply } from '@/services/GeminiAIServices';
+
+type prompts = 
+    {
+        inputPrompt: string | null,
+        aiResponse: string | null,
+    }
 
 function Modal({setShow}:{
     setShow: React.Dispatch<React.SetStateAction<boolean>>
 }) {
 
     const [inputText, setInputText] = useState("")
-    const [inputPrompt, setInputPrompt] = useState<any[]>([])
-    const [aiResponse, setAiResponse] = useState<any[]>([])
+    const [prompts, setPrompts] = useState<prompts[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(false)
 
@@ -17,10 +25,10 @@ function Modal({setShow}:{
     const modalContentRef = useRef<HTMLInputElement>(null);
 
     //This function generates dummy AI response
-    const generateaiResponse = (textInput:String): Promise<string> => {
+    const generateaiResponse = (textInput:string): Promise<string> => {
         setLoading(true)
-        const dummyResponse = "Thank you for the opportunity! If you have any more questions or if there's anything else I can help you with, feel free to ask."
-
+        // const response = generateAIReply(textInput)
+        const response = generateGeminiReply(textInput)
         //setTimeout is added to have exprience like real API call
         return new Promise((res, rej) => {
             if(!textInput) {
@@ -28,7 +36,7 @@ function Modal({setShow}:{
                 return rej("No Respose")
             }
             setTimeout(() => {
-                res(dummyResponse)
+                res(response)
                 setLoading(false)
             }, 1000)
         })
@@ -42,24 +50,23 @@ function Modal({setShow}:{
         if(!inputText){
             return
         }
-        
-        setInputPrompt([...inputPrompt, inputText])
-        setInputText("")
 
         let generatedResponse = await generateaiResponse(inputText)
-        setAiResponse([...aiResponse, generatedResponse])
+        setPrompts([...prompts, {inputPrompt: inputText, aiResponse: generatedResponse}])
+
+        setInputText("")
     }
 
     //This blocks executes when Insert button is clicked
     const handleInsertBtn = () => {
-        if(aiResponse.length > 0){
+        if(prompts.length > 0){
             const messageContainer = document.getElementsByClassName("msg-form__contenteditable")[0]
             messageContainer.ariaLabel=""
 
             const placeholderDiv = document.getElementsByClassName("msg-form__placeholder")
             placeholderDiv[0]?.parentElement?.removeChild(placeholderDiv[0])
             
-            messageContainer.children[0].textContent = aiResponse[aiResponse.length - 1]
+            messageContainer.children[0].textContent = prompts[prompts.length - 1].aiResponse
 
             setShow(false)
         }
@@ -101,16 +108,18 @@ return (
             <div id="messages" 
             className='max-h-64 overflow-y-auto flex flex-col'
             >
-                {inputPrompt.map((value, index) => (
-                    <div key={index}
-                        className='bg-[#DFE1E7] text-[#666D80] rounded-xl p-3 mb-3 text-right max-w-[80%] self-end ml-auto'
-                    >{value}</div>
+                {prompts.map((value, index) => (
+                    <div key={index}>
+                        <div
+                            className='bg-[#DFE1E7] text-[#666D80] rounded-xl p-3 mb-3 text-right w-fit max-w-[80%] self-end ml-auto'
+                        >{value.inputPrompt}</div>
+
+                        <div
+                            className='bg-[#DBEAFE] text-[#666D80] rounded-xl p-3 mb-3 text-left w-fit max-w-[80%] self-start mr-auto'
+                        >{value.aiResponse}</div>
+                    </div>
                 ))}
-                {aiResponse.map((value, index) => (
-                    <div key={index}
-                        className='bg-[#DBEAFE] text-[#666D80] rounded-xl p-3 mb-3 text-left max-w-[80%] self-start mr-auto'
-                    >{value}</div>
-                ))}
+
             </div>
             <div className='my-5'>
                 <input id="input-text" type="text" placeholder="Your prompt" 
@@ -121,7 +130,7 @@ return (
             </div>
             <div className='flex justify-end gap-3 mt-3'>
                 <button id="insert-btn" 
-                    className={`bg-white items-center text-[#666D80] px-3 py-1 border-2 border-[#666D80] rounded-md cursor-pointer mr-2 ${aiResponse.length > 0 ? 'flex' : 'hidden'}`}
+                    className={`bg-white items-center text-[#666D80] px-3 py-1 border-2 border-[#666D80] rounded-md cursor-pointer mr-2 ${prompts.length > 0 ? 'flex' : 'hidden'}`}
                     onClick={handleInsertBtn}
                 >
                     <img src={insertIcon} alt="Insert" 
@@ -129,32 +138,30 @@ return (
                     /> 
                     <b>Insert</b>
                 </button>
-                {aiResponse.length == 0 ?
-                    <button id="generate-btn" 
-                        className={`bg-[#007bff] items-center text-white flex px-3 py-1 border-2 rounded-md cursor-pointer
-                            ${loading ? `disabled bg-[#666D80]` : `border-[#007bff]`}
-                            `}
-                        onClick={(event :React.MouseEvent<HTMLButtonElement, MouseEvent>) => handleGenrateBtnClick(event)}
-                    >
-                        {loading ? 'Loading...' :
-                            <>
-                                <img src={genIcon} alt="Generate" 
-                                    className='align-middle mr-2 w-6 h-6'
-                                />
-                                Generate
-                            </>
-                        }
-                    </button> 
-                :
-                    <button id="regenerate-btn" 
-                        className={`bg-[#007bff] items-center text-white flex px-3 py-1 border-2 border-[#007bff] rounded-md cursor-pointer`}   
-                    >
-                        <img src={reGenIcon} alt="Generate" 
-                            className='align-middle mr-2 w-6 h-6'
-                        />
-                        Regenerate
-                    </button>
-                }
+                
+                <button id="generate-btn" 
+                    className={`bg-[#007bff] items-center text-white flex px-3 py-1 border-2 rounded-md cursor-pointer
+                        ${loading ? `disabled bg-[#666D80]` : `border-[#007bff]`}
+                        `}
+                    onClick={(event :React.MouseEvent<HTMLButtonElement, MouseEvent>) => handleGenrateBtnClick(event)}
+                >
+                    {loading ? 'Loading...' :
+                        prompts.length == 0 ?
+                        <>
+                            <img src={genIcon} alt="Generate" 
+                                className='align-middle mr-2 w-6 h-6'
+                            />
+                            Generate
+                        </>
+                        :
+                        <>
+                            <img src={reGenIcon} alt="Generate" 
+                                className='align-middle mr-2 w-6 h-6'
+                            />
+                            Regenerate
+                        </>
+                    }
+                </button> 
             </div>
         </div>
     </div>

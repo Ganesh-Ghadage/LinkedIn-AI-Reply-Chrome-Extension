@@ -28,7 +28,6 @@ export default () => {
     const target = event.target as HTMLElement
 
     if(target.matches('.msg-form__contenteditable') || target.matches(".msg-form__contenteditable > p")){
-      console.log('msg box target')
       parentElement = target?.closest('.msg-form__contenteditable') || target?.closest(".msg-form__contenteditable > p")!
       parentElement?.appendChild(aiIconHTML)
 
