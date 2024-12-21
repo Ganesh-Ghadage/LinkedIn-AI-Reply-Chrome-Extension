@@ -23,38 +23,24 @@ function Modal({setShow}:{
 
     //this is get referance on Prompt Box Div
     const modalContentRef = useRef<HTMLInputElement>(null);
-
-    //This function generates dummy AI response
-    const generateaiResponse = (textInput:string): Promise<string> => {
-        setLoading(true)
-        // const response = generateAIReply(textInput)
-        const response = generateGeminiReply(textInput)
-        //setTimeout is added to have exprience like real API call
-        return new Promise((res, rej) => {
-            if(!textInput) {
-                setError(true)
-                return rej("No Respose")
-            }
-            setTimeout(() => {
-                res(response)
-                setLoading(false)
-            }, 1000)
-        })
-    }
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
     //This block executes when Generate button is clicked
     const handleGenrateBtnClick = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         e.stopPropagation();
+        setLoading(true)
 
         //Checks if user has provided Input or not
         if(!inputText){
+            setError(true)
             return
         }
-
-        let generatedResponse = await generateaiResponse(inputText)
+        
+        let generatedResponse = await generateGeminiReply(inputText)
         setPrompts([...prompts, {inputPrompt: inputText, aiResponse: generatedResponse}])
 
         setInputText("")
+        setLoading(false)
     }
 
     //This blocks executes when Insert button is clicked
@@ -75,9 +61,16 @@ function Modal({setShow}:{
     //This block is close the modal by clicking outside of it
     const handleCustomModalClick = (event: any) => {
         if (modalContentRef.current && modalContentRef.current != event.target && !modalContentRef.current.contains(event.target)) {
+            setError(false)
             setShow(false)
         }
     }
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [prompts]);
 
 if(error){
     return (
@@ -117,9 +110,10 @@ return (
                         <div
                             className='bg-[#DBEAFE] text-[#666D80] rounded-xl p-3 mb-3 text-left w-fit max-w-[80%] self-start mr-auto'
                         >{value.aiResponse}</div>
+                        
                     </div>
                 ))}
-
+                <div ref={messagesEndRef} />
             </div>
             <div className='my-5'>
                 <input id="input-text" type="text" placeholder="Your prompt" 

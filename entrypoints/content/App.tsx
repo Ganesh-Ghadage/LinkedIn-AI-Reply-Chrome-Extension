@@ -41,7 +41,6 @@ export default () => {
     }
   })
 
-
   if(showModal){
     return (
       <Modal setShow={setShowModal} />
