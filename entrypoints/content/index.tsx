@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 
 export default defineContentScript({
-  matches: ["*://www.linkedin.com/messaging/*/*"],
+  matches: ["*://www.linkedin.com/*/*/*"],
   cssInjectionMode: "ui",
 
   async main(ctx) {

@@ -6,6 +6,6 @@ export default defineConfig({
   manifest: {
     "name": "LinkedIn-AI-Reply",
     "version": "1.0.0",
-    "description": "Chrome extension that runs on LinkedIn and assists users in generating replies to messages. This is a demo extension, It actually won't generate the reply.",
+    "description": "LinkedIn AI Reply is a Chrome extension that generates professional, context-aware replies for LinkedIn messages and posts using Google Gemini AI. Save time, maintain professionalism, and engage effectively with your network.",
   }
 });
